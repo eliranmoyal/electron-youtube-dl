@@ -1,0 +1,5 @@
+node_modules
+*.exe
+*.txt
+*.mp3
+*.m4a

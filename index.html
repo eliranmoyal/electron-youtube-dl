@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Youtube-dl downloader</title>
+  </head>
+  <body>
+    <h1>Youtube-dl downloader</h1>
+
+  <input type="text" id="textArea" placeholder="link"/>
+  <input type="button" id="button" value="Start" /> 
+  
+  <h2>PlayList</h2>
+  <div id="ListData">
+    <p id="listStatus"></p>
+    <p id="listProgress"></p>
+  </div>
+  <h2>Download</h2>
+  <div id="downloadData">
+    <p id="downloadStatus"></p>
+    <div id="downloadProgress" style="display:none;">
+      Percentage: <p id="percentage"></p>
+      ETA: <p id="ETA"></p>
+      <p id="converting"></p>
+    </div>
+  </div>
+  <p id="progress">
+    
+  </p>
+  <script>window.$ = window.jQuery = require('./js/jquery-2.1.4.min.js');</script>
+  <script src="runner.js"></script>
+  </body>
+
+</html>
