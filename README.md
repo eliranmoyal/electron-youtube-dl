@@ -3,6 +3,7 @@
 ## What you need (On PATH or in same directory)
 * youtube-dl.exe
 * ffmpeg.exe
+* ffprobe.exe
 
 ## How to run?
 1. `git clone`
