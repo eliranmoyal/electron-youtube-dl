@@ -1,29 +1,65 @@
 var spawn = require('child_process').spawn;
 
 var dataOfDownload = {};
+
+function Row(rowString){
+	if (rowString.indexOf("[") == -1) {
+		this.type = "Unknown";
+		return;
+	};
+	//splits '[a]b' to ['a','b']
+	var rowParts = rowString.split(/[\[+\]]/).filter(s=>s.length>1);
+	this.type = rowParts[0].trim();
+	this.value = rowParts[1].trim();
+}
+
 function splitAndDisplayLog (chunk) {
 	chunkString = chunk.toString();
-	console.log(chunkString);
-	splittedChunk = chunkString.split("[");
-		for(i=1;i<splittedChunk.length;i++){
-			log = splittedChunk[i];
-			if(log.indexOf("youtube:playlist]")==0){
-				parseYouTubePlayList(log.substr(18));
+    var rowArray = splitLogToRows(chunkString);
+    rowArray.forEach(function(row) {
+    	switch(row.type) {
+    		case "youtube:playlist":
+    			parseYouTubePlayList(row.value);
+    			break;
+    		case "download":
+    			parseDownload(row.value);
+    			break;
+			case "ffmpeg":
+				parseffmpeg(row.value);
+				break;
+			case "youtube":
+				break;
+			default:
+				console.log("Recieved Unknown Key:"+row.type);
 			}
-			else if (log.indexOf("download]") == 0 ){
-				parseDownload(log.substr(10));
-			}
-			else if (log.indexOf("ffmpeg]") == 0 ){
-				parseffmpeg(log.substr(8));
-			}
-		}
+    });
 }
+function splitLogToRows(chunk){
+	console.log(chunk);
+	splittedChunk = chunkString.split("\n");
+	var rowArray = [];
+	splittedChunk.forEach(function(rowStr) {
+		if (rowStr.indexOf("Deleting") == 0) {
+			rowStr = "[ffmpeg]"+rowStr;
+		}
+		var splittedRow = rowStr.split("[").filter(s=>s.length>1);
+		if (splittedRow.length == 1) {
+			rowArray.push(new Row(rowStr));
+		}
+		else {			
+			splittedRow.forEach(r=>rowArray.push(new Row("["+r)));
+		}
+	});
+	console.log(rowArray);	
+	return rowArray;
+}
+
  function parseffmpeg (log) {
  	if(log.indexOf("Destination") == 0){
- 		$("#converting").html("Finished converting! saving the file..");
+ 		$("#converting").html("Converting to mp3..."); 		
  	}
  	else {
- 		$("#converting").html("Converting to mp3...");
+ 		$("#converting").html("Finished converting! saving the file..");
  	}
  }
 
@@ -38,17 +74,21 @@ function parseDownload (log) {
 		//[download] Downloading video 1 of 26 
 		videoNumber = log.substr("Downloading video ".length);
 		videoNumber = videoNumber.substring(0,videoNumber.indexOf(" "));
+		$("#downloadProgress").hide();
 		dataOfDownload["current"] = {};
 		dataOfDownload["current"]["number"] =  videoNumber;
-		$("#downloadStatus").html("video number: " + videoNumber);
+		$("#videoNumber").html("video number: " + videoNumber);
 		return;
 	}
 	if(log.indexOf("Destination: ") == 0){
 		//[download] Destination: Arctic Monkeys - Arabella (Official Audio)-Jn6-TItCazo.m4a 
-		videoName = log.substr("Destination: ".length);
-		videoName = videoName.substring(0,videoName.indexOf(".m4a"));
+		if (dataOfDownload["current"] == undefined) {
+			dataOfDownload["current"] = {};
+			$("#downloadProgress").hide();
+		}
+		videoName = log.substr("Destination: ".length);		
 		dataOfDownload["current"]["name"] =  videoName;
-		$("#downloadStatus").append("<br> video name:" + videoName);
+		$("#videoName").html("video name:" + videoName);
 	}
 	if(log.indexOf("% of")!=-1 && log.indexOf("ETA")!=-1){
 		//[download] X% of YMiB at ZKiB/s ETA TIME .
@@ -60,6 +100,7 @@ function parseDownload (log) {
 		timeLeft = log.substr(log.indexOf("ETA ") + "ETA ".length);
 		dataOfDownload["current"]["eta"] = timeLeft;
 		$("#percentage").html(percentage);
+		$("#percentage").width(percentage+"%");		
 		$("#ETA").html(timeLeft);
 		return;
 	}
@@ -92,17 +133,12 @@ function parseYouTubePlayList(log){
 		dataOfDownload["playlist"]["numOfSongs"] = numOfSongs;
 		$('#listStatus').append(" (" + numOfSongs +" videos)");
 	}
-	
-
-
 }
 
-$('#button').on('click', function () {
+$('#button').on('click', function () {	
 	var link = document.querySelectorAll('#textArea')[0].value;
 	var options =
-	['-x','--no-check-certificate',
-	'--audio-format','mp3'
-	,link];
+	['--no-check-certificate', '--extract-audio', '--audio-format', 'mp3' ,link];
 
 	var child = spawn('youtube-dl',options);
 
