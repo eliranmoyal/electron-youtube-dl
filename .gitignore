@@ -3,3 +3,4 @@ node_modules
 *.txt
 *.mp3
 *.m4a
+.idea

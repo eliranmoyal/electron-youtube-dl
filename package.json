@@ -4,6 +4,7 @@
   "description": "Electron application Using youtube-dl",
   "devDependencies": {
     "electron-prebuilt": "^0.35.0",
-    "electron-packager": "~5.1.1"
+    "electron-packager": "~5.1.1",
+	"bootstrap": "^3.3.6"
   }
 }
